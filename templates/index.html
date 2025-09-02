@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X投稿文面生成アプリ</title>
+    <!-- Tailwind CSS CDNを読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fontsから'Inter'フォントを読み込み -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 全体のフォントスタイルと背景色を設定 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* 明るいグレーの背景 */
+            color: #333; /* 暗めのテキスト色 */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 bg-gray-100">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-center text-blue-600 mb-8">X投稿文面生成アプリ🚀</h1>
+
+        <!-- ユーザーの感想入力エリア -->
+        <div class="mb-6">
+            <label for="userThoughts" class="block text-lg font-medium text-gray-700 mb-2">あなたの感想・コメント:</label>
+            <textarea id="userThoughts" rows="6" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 text-gray-800 bg-gray-50 resize-y" placeholder="例：日経さん爆上げ🚀 ウェーイ🙌"></textarea>
+        </div>
+
+        <!-- 株式コード入力部分 -->
+        <div class="mb-6">
+            <label class="block text-lg font-medium text-gray-700 mb-2">本日の購入（株式コード）:</label>
+            <div id="stockInputs" class="space-y-3 mb-4">
+                <!-- JavaScriptによってここに株式コードの入力フィールドが追加されます -->
+            </div>
+            <button id="addStockBtn" class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 ease-in-out">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                株式コードを追加
+            </button>
+        </div>
+
+        <!-- 生成ボタン -->
+        <button id="generatePostBtn" class="w-full bg-green-500 text-white text-xl font-semibold py-3 rounded-md shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-300 ease-in-out mb-6">
+            X投稿文を生成
+        </button>
+
+        <!-- 生成された投稿文の表示とコピーボタン -->
+        <div class="mb-6">
+            <label class="block text-lg font-medium text-gray-700 mb-2">生成された投稿文:</label>
+            <textarea id="generatedPostOutput" rows="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 text-gray-800 bg-gray-50 resize-y" readonly placeholder="ここに生成された投稿文が表示されます..."></textarea>
+            <button id="copyToXBtn" class="mt-3 w-full bg-purple-500 text-white py-2 rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 ease-in-out">
+                Xに投稿する (コピーしてブラウザで開く)
+            </button>
+        </div>
+
+        <!-- メッセージ表示ボックス（エラーや成功通知用） -->
+        <div id="messageBox" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
+            <strong class="font-bold">エラー!</strong>
+            <span class="block sm:inline" id="messageText"></span>
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" onclick="document.getElementById('messageBox').classList.add('hidden');"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+            </span>
+        </div>
+    </div>
+
+    <script>
+        // DOM要素の参照を取得
+        const userThoughtsEl = document.getElementById('userThoughts');
+        const stockInputsContainer = document.getElementById('stockInputs');
+        const addStockBtn = document.getElementById('addStockBtn');
+        const generatePostBtn = document.getElementById('generatePostBtn');
+        const generatedPostOutput = document.getElementById('generatedPostOutput');
+        const copyToXBtn = document.getElementById('copyToXBtn'); // ボタンIDを修正しました
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+
+        // メッセージを表示する関数
+        function showMessage(text, isError = true) {
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden');
+            if (isError) {
+                // エラーメッセージのスタイル
+                messageBox.classList.remove('bg-green-100', 'border-green-400', 'text-green-700');
+                messageBox.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+            } else {
+                // 成功メッセージのスタイル
+                messageBox.classList.remove('bg-red-100', 'border-red-400', 'text-red-700');
+                messageBox.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+            }
+            // 5秒後にメッセージを自動的に非表示にする
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        // 新しい株式コード入力フィールドを作成する関数
+        function createStockInput() {
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2';
+            div.innerHTML = `
+                <input type="text" class="stock-code-input flex-grow rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-800 bg-gray-50" placeholder="例: 9432">
+                <button type="button" class="remove-stock-btn p-2 text-red-500 hover:text-red-700 focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            `;
+            const removeBtn = div.querySelector('.remove-stock-btn');
+            removeBtn.addEventListener('click', () => {
+                div.remove(); // 対応する入力フィールドを削除
+                updateRemoveButtonsVisibility(); // 削除ボタンの表示を更新
+            });
+            return div;
+        }
+
+        // 削除ボタンの表示/非表示を更新する関数（入力フィールドが1つの場合は非表示）
+        function updateRemoveButtonsVisibility() {
+            const allInputs = document.querySelectorAll('#stockInputs .stock-code-input');
+            const removeButtons = document.querySelectorAll('#stockInputs .remove-stock-btn');
+            if (allInputs.length <= 1) {
+                removeButtons.forEach(btn => btn.classList.add('hidden'));
+            } else {
+                removeButtons.forEach(btn => btn.classList.remove('hidden'));
+            }
+        }
+
+        // 「株式コードを追加」ボタンのイベントリスナー
+        addStockBtn.addEventListener('click', () => {
+            stockInputsContainer.appendChild(createStockInput()); // 新しい入力フィールドを追加
+            updateRemoveButtonsVisibility(); // 削除ボタンの表示を更新
+        });
+
+        // アプリ起動時に最初の入力フィールドを追加
+        stockInputsContainer.appendChild(createStockInput());
+        updateRemoveButtonsVisibility(); // 初期状態の削除ボタン表示設定
+
+        // 「X投稿文を生成」ボタンのイベントリスナー
+        generatePostBtn.addEventListener('click', async () => {
+            generatedPostOutput.value = '情報を取得中...'; // 処理中のメッセージを表示
+            generatedPostOutput.classList.add('animate-pulse'); // ローディングアニメーション
+            messageBox.classList.add('hidden'); // 以前のメッセージを非表示にする
+
+            const userThoughts = userThoughtsEl.value; // ユーザーの感想を取得
+            const stockCodeInputs = document.querySelectorAll('.stock-code-input');
+            // 入力された株式コードのリストを取得（空白は除外）
+            const stockCodes = Array.from(stockCodeInputs)
+                                    .map(input => input.value.trim())
+                                    .filter(code => code !== '');
+
+            // 感想も株式コードも入力されていない場合はエラーメッセージを表示
+            if (stockCodes.length === 0 && userThoughts.trim() === '') {
+                showMessage('投稿文を生成するには、感想または株式コードを入力してください。');
+                generatedPostOutput.value = '';
+                generatedPostOutput.classList.remove('animate-pulse');
+                return;
+            }
+
+            try {
+                // Step 1: バックエンドから株価データを取得
+                const stockDataResponse = await fetch('/api/get-stock-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ stockCodes: stockCodes }), // 株式コードをバックエンドに送信
+                });
+
+                if (!stockDataResponse.ok) {
+                    throw new Error(`株式データの取得に失敗しました: ${stockDataResponse.statusText}`);
+                }
+                const fetchedStockData = await stockDataResponse.json(); // 取得したJSONデータをパース
+
+                // Step 2: 取得した株価データとユーザーの感想を使って投稿文を生成
+                const generatePostResponse = await fetch('/api/generate-post', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userThoughts: userThoughts,
+                        stockData: fetchedStockData // 取得した株価データをバックエンドに送信
+                    }),
+                });
+
+                if (!generatePostResponse.ok) {
+                    throw new Error(`投稿文の生成に失敗しました: ${generatePostResponse.statusText}`);
+                }
+                const result = await generatePostResponse.json(); // 生成された投稿文をJSONで取得
+                generatedPostOutput.value = result.postText; // テキストエリアに表示
+                showMessage('投稿文が正常に生成されました！', false); // 成功メッセージ
+
+            } catch (error) {
+                console.error('投稿文生成エラー:', error);
+                showMessage(`投稿文の生成中にエラーが発生しました: ${error.message}`);
+                generatedPostOutput.value = 'エラーにより投稿文を生成できませんでした。';
+            } finally {
+                generatedPostOutput.classList.remove('animate-pulse'); // ローディングアニメーションを停止
+            }
+        });
+
+        // 「Xに投稿する」ボタンのイベントリスナー
+        copyToXBtn.addEventListener('click', () => {
+            const postText = generatedPostOutput.value;
+            if (postText) {
+                // URLエンコードしてXの投稿URLに埋め込む
+                const encodedText = encodeURIComponent(postText);
+                const xUrl = `https://twitter.com/intent/tweet?text=${encodedText}`;
+                
+                // 新しいタブでX.comを開く
+                window.open(xUrl, '_blank');
+                showMessage('X.comを開き、投稿文をプレフィルしました！', false);
+            } else {
+                showMessage('Xに投稿する内容がありません。まず投稿文を生成してください。');
+            }
+        });
+    </script>
+</body>
+</html>
