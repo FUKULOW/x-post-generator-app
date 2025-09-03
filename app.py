@@ -112,37 +112,58 @@ def api_get_stock_data():
     return jsonify(results)
 
 # ユーザーの入力と株価データに基づいてX投稿文を生成するAPIエンドポイント
+@app.route('/api/get-stock-data', methods=['POST'])
+def get_stock_data():
+    stock_codes = request.json.get('stockCodes', [])
+    stock_data = {}
+    for code in stock_codes:
+        ticker = f"{code}.T"
+        try:
+            stock_info = yf.Ticker(ticker).info
+            current_price = stock_info.get('currentPrice', 'N/A')
+            open_price = stock_info.get('open', 'N/A')
+            name = stock_info.get('shortName', 'N/A')
+
+            if current_price != 'N/A' and open_price != 'N/A':
+                change = current_price - open_price
+                change_percent = (change / open_price) * 100
+                stock_data[code] = {
+                    'name': name,
+                    'current_price': current_price,
+                    'change_price': round(change, 2),
+                    'change_percent': round(change_percent, 2)
+                }
+        except Exception as e:
+            # エラー発生時も空のデータで継続
+            stock_data[code] = {
+                'name': '取得失敗',
+                'current_price': 'N/A',
+                'change_price': 'N/A',
+                'change_percent': 'N/A'
+            }
+    return jsonify(stock_data)
+
 @app.route('/api/generate-post', methods=['POST'])
-def api_generate_post():
-    data = request.json
-    user_thoughts_input = data.get('userThoughts', '') # ユーザーの感想
-    # 取得済みの株価データ（辞書形式: {コード: {名前: "", 配当利回り: ""}}）
-    fetched_stock_data = data.get('stockData', {}) 
+def generate_post():
+    user_thoughts = request.json.get('userThoughts', '')
+    stock_data = request.json.get('stockData', {})
     
-    # 今日の日付を YYYY年MM月DD日 形式で自動生成
-    today_date_str = date.today().strftime("%Y年%m月%d日")
+    # 投稿文の生成ロジック
+    post_text = ""
+    # あなたのロジックに従って投稿文を作成
     
-    purchase_details_text = ""
-    # 取得済みの株価データを使って投稿文の購入部分を作成
-    for code, info in fetched_stock_data.items():
-        company_name = info.get('name', '企業名不明')
-        dividend_yield_percent = info.get('dividendYield', '0.00')
-        purchase_details_text += f"<{code}> {company_name} {dividend_yield_percent}%\n"
+    # ここに修正を加えます
+    # 正常に投稿文が生成された場合
+    # 既存のreturn文を以下に置き換えます
     
-    # 全体の投稿文を組み立てる
-    post_content = f"""
-{user_thoughts_input.strip()}
+    return jsonify({
+        "postText": post_text,
+        "success": True  # この行を追加
+    })
 
-本日の購入({today_date_str})
-{purchase_details_text.strip()}
-"""
-    # 生成された投稿文をJSON形式で返す
-    return jsonify({"postText": post_content.strip()})
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-# スクリプトが直接実行された場合にWebアプリを起動
 if __name__ == '__main__':
-    # 'templates' ディレクトリが存在しない場合、作成
-    if not os.path.exists('templates'):
-        os.makedirs('templates')
-    # Flaskアプリを実行。debug=Trueで開発中に便利な機能が有効になります。
     app.run(debug=True)
