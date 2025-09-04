@@ -80,11 +80,11 @@
             messageText.textContent = text;
             messageBox.classList.remove('hidden');
             if (isError) {
-                messageType.textContent = 'エラー!';
+                messageType.textContent = '❌';
                 messageBox.classList.remove('bg-green-100', 'border-green-400', 'text-green-700');
                 messageBox.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
             } else {
-                messageType.textContent = '成功!';
+                messageType.textContent = '👍';
                 messageBox.classList.remove('bg-red-100', 'border-red-400', 'text-red-700');
                 messageBox.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
             }
