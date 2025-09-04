@@ -56,9 +56,7 @@ STOCK_NAMES_JP = {
     "9434": "ソフトバンク",
     "9513": "Jパワー"
 }
-# -------------------------------------------------------------
 
-# 株式コードに基づいて株価データを取得するAPIエンドポイント
 @app.route('/api/get-stock-data', methods=['POST'])
 def get_stock_data():
     stock_codes = request.json.get('stockCodes', [])
@@ -67,62 +65,51 @@ def get_stock_data():
         ticker = f"{code}.T"
         try:
             stock_info = yf.Ticker(ticker).info
-            current_price = stock_info.get('currentPrice', 'N/A')
-            open_price = stock_info.get('open', 'N/A')
-
+            
             # 日本語名を辞書から取得し、見つからない場合はyfinanceの英語名を取得
             name = STOCK_NAMES_JP.get(code, stock_info.get('longName', '企業名不明'))
-
-            if current_price != 'N/A' and open_price != 'N/A':
-                change = current_price - open_price
-                change_percent = (change / open_price) * 100
-                stock_data[code] = {
-                    'name': name,
-                    'current_price': current_price,
-                    'change_price': round(change, 2),
-                    'change_percent': round(change_percent, 2)
-                }
-            else:
-                stock_data[code] = {
-                    'name': name,
-                    'current_price': 'N/A',
-                    'change_price': 'N/A',
-                    'change_percent': 'N/A'
-                }
+            
+            # 配当利回りを取得し、存在しない場合は0.0を返す
+            dividend_yield = stock_info.get('dividendYield', 0.0)
+            
+            stock_data[code] = {
+                'name': name,
+                'dividendYield': round(dividend_yield * 100, 2)
+            }
         except Exception as e:
             # エラー発生時も空のデータで継続
             stock_data[code] = {
                 'name': STOCK_NAMES_JP.get(code, '取得失敗'),
-                'current_price': 'N/A',
-                'change_price': 'N/A',
-                'change_percent': 'N/A'
+                'dividendYield': 'N/A'
             }
     return jsonify(stock_data)
 
-# ユーザーの入力と株価データに基づいてX投稿文を生成するAPIエンドポイント
 @app.route('/api/generate-post', methods=['POST'])
 def generate_post():
     user_thoughts = request.json.get('userThoughts', '')
     stock_data = request.json.get('stockData', {})
     
+    # 日付を自動生成
+    from datetime import date
+    today_date_str = date.today().strftime("%Y年%m月%d日")
+    
     # 投稿文の生成ロジック
     post_text = f"{user_thoughts}\n"
+    post_text += f"\n本日の購入({today_date_str})"
+    
     for code, data in stock_data.items():
-        if data['change_percent'] != 'N/A':
-            change_direction = '上昇' if data['change_percent'] > 0 else '下落'
-            post_text += f"\n📊{data['name']} ({code}): {data['change_percent']}% {change_direction} ({data['change_price']}円)"
+        if data['dividendYield'] != 'N/A':
+            post_text += f"\n<{code}> {data['name']} {data['dividendYield']}%"
         else:
-            post_text += f"\n📊{data['name']} ({code}): 株価情報取得失敗"
+            post_text += f"\n<{code}> {data['name']} 情報取得失敗"
 
     post_text += "\n\n#投資 #株式投資 #日経平均"
     
-    # 成功時のレスポンスを正しく返す
     return jsonify({
         "postText": post_text,
         "success": True
     })
 
-# ルートURL ('/') にアクセスがあった際に 'index.html' を表示
 @app.route('/')
 def home():
     return render_template('index.html')
