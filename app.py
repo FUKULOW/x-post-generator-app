@@ -1,11 +1,10 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template, request, jsonify
 import yfinance as yf
-from datetime import date
-import os
+import requests
 
 app = Flask(__name__)
 
-# ★★★ ここに株式コードと日本語名のマッピング辞書を追加 ★★★
+# ★★★ 株式コードと日本語名のマッピング辞書 ★★★
 STOCK_NAMES_JP = {
     "1605": "INPEX",
     "1802": "大林組",
@@ -59,59 +58,7 @@ STOCK_NAMES_JP = {
 }
 # -------------------------------------------------------------
 
-# 株式コードから企業名と配当利回り（%）を取得する関数
-def get_stock_info(ticker_symbol):
-    """
-    指定されたティッカーシンボル（株式コード）から企業名と配当利回り（%）を取得します。
-    日本の株式の場合、通常末尾に「.T」を付けます。
-    
-    Args:
-        ticker_symbol (str): 株式コード（例: "3388"）。
-        
-    Returns:
-        dict: 企業名と配当利回り%を含む辞書。情報取得に失敗した場合はデフォルト値。
-    """
-    try:
-        # ★★★ 辞書から日本語名を取得。見つからない場合はyfinanceで英語名を取得 ★★★
-        name = STOCK_NAMES_JP.get(ticker_symbol, None)
-        if not name:
-            # Yahoo Financeでの日本の株式は、コードの末尾に ".T" を付けます
-            stock = yf.Ticker(f"{ticker_symbol}.T")
-            info = stock.info
-            name = info.get('longName', '企業名不明')
-
-        # 配当利回りの取得。yfinanceはパーセンテージ値（例: 4.17）で返す場合があるため、
-        # そのまま使用します。'dividendYield' がない場合は 0.0 を返します。
-        stock = yf.Ticker(f"{ticker_symbol}.T")
-        info = stock.info
-        dividend_rate = info.get('dividendYield', 0)
-        
-        return {"name": name, "dividendYield": f"{dividend_rate:.2f}"}
-    except Exception as e:
-        # エラーが発生した場合、コンソールに詳細を出力
-        print(f"エラー: 株式コード {ticker_symbol} の情報を取得できませんでした。エラー詳細: {e}")
-        return {"name": "企業名不明", "dividendYield": "0.00"}
-
-# ルートURL ('/') にアクセスがあった際に 'index.html' を表示
-@app.route('/')
-def index():
-    return render_template('index.html')
-
 # 株式コードに基づいて株価データを取得するAPIエンドポイント
-@app.route('/api/get-stock-data', methods=['POST'])
-def api_get_stock_data():
-    data = request.json
-    stock_codes = data.get('stockCodes', []) # リクエストボディから株式コードのリストを取得
-    
-    results = {}
-    for code in stock_codes:
-        # 各株式コードについて情報を取得し、結果に格納
-        results[code] = get_stock_info(code)
-    
-    # 取得したデータをJSON形式で返す
-    return jsonify(results)
-
-# ユーザーの入力と株価データに基づいてX投稿文を生成するAPIエンドポイント
 @app.route('/api/get-stock-data', methods=['POST'])
 def get_stock_data():
     stock_codes = request.json.get('stockCodes', [])
@@ -122,7 +69,9 @@ def get_stock_data():
             stock_info = yf.Ticker(ticker).info
             current_price = stock_info.get('currentPrice', 'N/A')
             open_price = stock_info.get('open', 'N/A')
-            name = stock_info.get('shortName', 'N/A')
+
+            # 日本語名を辞書から取得し、見つからない場合はyfinanceの英語名を取得
+            name = STOCK_NAMES_JP.get(code, stock_info.get('longName', '企業名不明'))
 
             if current_price != 'N/A' and open_price != 'N/A':
                 change = current_price - open_price
@@ -133,34 +82,47 @@ def get_stock_data():
                     'change_price': round(change, 2),
                     'change_percent': round(change_percent, 2)
                 }
+            else:
+                stock_data[code] = {
+                    'name': name,
+                    'current_price': 'N/A',
+                    'change_price': 'N/A',
+                    'change_percent': 'N/A'
+                }
         except Exception as e:
             # エラー発生時も空のデータで継続
             stock_data[code] = {
-                'name': '取得失敗',
+                'name': STOCK_NAMES_JP.get(code, '取得失敗'),
                 'current_price': 'N/A',
                 'change_price': 'N/A',
                 'change_percent': 'N/A'
             }
     return jsonify(stock_data)
 
+# ユーザーの入力と株価データに基づいてX投稿文を生成するAPIエンドポイント
 @app.route('/api/generate-post', methods=['POST'])
 def generate_post():
     user_thoughts = request.json.get('userThoughts', '')
     stock_data = request.json.get('stockData', {})
     
     # 投稿文の生成ロジック
-    post_text = ""
-    # あなたのロジックに従って投稿文を作成
+    post_text = f"{user_thoughts}\n"
+    for code, data in stock_data.items():
+        if data['change_percent'] != 'N/A':
+            change_direction = '上昇' if data['change_percent'] > 0 else '下落'
+            post_text += f"\n📊{data['name']} ({code}): {data['change_percent']}% {change_direction} ({data['change_price']}円)"
+        else:
+            post_text += f"\n📊{data['name']} ({code}): 株価情報取得失敗"
+
+    post_text += "\n\n#投資 #株式投資 #日経平均"
     
-    # ここに修正を加えます
-    # 正常に投稿文が生成された場合
-    # 既存のreturn文を以下に置き換えます
-    
+    # 成功時のレスポンスを正しく返す
     return jsonify({
         "postText": post_text,
-        "success": True  # この行を追加
+        "success": True
     })
 
+# ルートURL ('/') にアクセスがあった際に 'index.html' を表示
 @app.route('/')
 def home():
     return render_template('index.html')
