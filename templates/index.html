@@ -3,65 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X投稿文面生成アプリ</title>
-    <!-- Tailwind CSS CDNを読み込み -->
+    <title>X投稿文面生成アプリ🚀</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fontsから'Inter'フォントを読み込み -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* 全体のフォントスタイルと背景色を設定 */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5; /* 明るいグレーの背景 */
-            color: #333; /* 暗めのテキスト色 */
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4 bg-gray-100">
+<body class="flex items-center justify-center min-h-screen p-4 bg-zinc-100 text-zinc-800">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl">
-        <h1 class="text-3xl font-bold text-center text-blue-600 mb-8">X投稿文面生成アプリ🚀</h1>
+        <h1 class="text-3xl font-bold text-center text-zinc-900 mb-8">X投稿文面生成アプリ🚀</h1>
 
-        <!-- ユーザーの感想入力エリア -->
         <div class="mb-6">
-            <label for="userThoughts" class="block text-lg font-medium text-gray-700 mb-2">あなたの感想・コメント:</label>
-            <textarea id="userThoughts" rows="6" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 text-gray-800 bg-gray-50 resize-y" placeholder="例：日経爆上げ🚀　ウェーイ🙌"></textarea>
+            <label for="userThoughts" class="block text-lg font-medium text-zinc-700 mb-2">あなたのコメント:</label>
+            <textarea id="userThoughts" rows="6" class="mt-1 block w-full rounded-md border-zinc-300 shadow-sm focus:border-zinc-500 focus:ring-zinc-500 p-3 text-zinc-900 bg-zinc-50 resize-y" placeholder="例：日経爆上げ🚀ウェーイ🙌"></textarea>
         </div>
 
-        <!-- 株式コード入力部分 -->
         <div class="mb-6">
-            <label class="block text-lg font-medium text-gray-700 mb-2">本日の購入（株式コード）:</label>
+            <label class="block text-lg font-medium text-zinc-700 mb-2">本日の購入（株式コード）:</label>
             <div id="stockInputs" class="space-y-3 mb-4">
-                <!-- JavaScriptによってここに株式コードの入力フィールドが追加されます -->
+                <div class="flex items-center space-x-2">
+                    <input type="text" class="stock-code-input flex-grow rounded-md border-zinc-300 shadow-sm focus:border-zinc-500 focus:ring-zinc-500 p-2 text-zinc-900 bg-zinc-50" placeholder="例: 9432">
+                    <button type="button" class="remove-stock-btn p-2 text-zinc-500 hover:text-zinc-700 focus:outline-none">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
             </div>
-            <button id="addStockBtn" class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 ease-in-out">
+            <button id="addStockBtn" class="flex items-center px-4 py-2 bg-zinc-200 text-zinc-800 rounded-md shadow-md hover:bg-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-opacity-75 transition duration-300 ease-in-out">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                 株式コードを追加
             </button>
         </div>
 
-        <!-- 生成ボタン -->
-        <button id="generatePostBtn" class="w-full bg-green-500 text-white text-xl font-semibold py-3 rounded-md shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-300 ease-in-out mb-6">
+        <button id="generatePostBtn" class="w-full bg-zinc-800 text-white text-xl font-semibold py-3 rounded-md shadow-md hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-opacity-75 transition duration-300 ease-in-out mb-6">
             X投稿文を生成
         </button>
 
-        <!-- 生成された投稿文の表示とボタン -->
         <div class="mb-6">
-            <label class="block text-lg font-medium text-gray-700 mb-2">生成された投稿文:</label>
-            <textarea id="generatedPostOutput" rows="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 text-gray-800 bg-gray-50 resize-y" readonly placeholder="ここに生成された投稿文が表示されます..."></textarea>
+            <label class="block text-lg font-medium text-zinc-700 mb-2">生成された投稿文:</label>
+            <textarea id="generatedPostOutput" rows="10" class="mt-1 block w-full rounded-md border-zinc-300 shadow-sm p-3 text-zinc-900 bg-zinc-50 resize-y" readonly placeholder="ここに生成された投稿文が表示されます..."></textarea>
             
             <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-3">
-                <button id="copyToClipboardBtn" class="w-full sm:w-1/2 bg-gray-500 text-white py-2 rounded-md shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition duration-300 ease-in-out">
+                <button id="copyToClipboardBtn" class="w-full sm:w-1/2 bg-zinc-200 text-zinc-800 py-2 rounded-md shadow-md hover:bg-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-opacity-75 transition duration-300 ease-in-out">
                     クリップボードにコピー
                 </button>
-                <button id="postToXBtn" class="w-full sm:w-1/2 bg-purple-500 text-white py-2 rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition duration-300 ease-in-out">
+                <button id="postToXBtn" class="w-full sm:w-1/2 bg-zinc-200 text-zinc-800 py-2 rounded-md shadow-md hover:bg-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-opacity-75 transition duration-300 ease-in-out">
                     Xに投稿する (ブラウザで開く)
                 </button>
             </div>
         </div>
 
-        <!-- メッセージ表示ボックス（エラーや成功通知用） -->
-        <div id="messageBox" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
-            <strong id="messageType" class="font-bold">エラー!</strong>
+        <div id="messageBox" class="hidden border px-4 py-3 rounded relative mt-4" role="alert">
+            <strong id="messageType" class="font-bold"></strong>
             <span class="block sm:inline" id="messageText"></span>
             <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('messageBox').classList.add('hidden');">
                 <svg class="fill-current h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
@@ -86,14 +81,14 @@
         function showMessage(text, isError = true) {
             messageText.textContent = text;
             messageBox.classList.remove('hidden');
+            messageBox.className = 'border px-4 py-3 rounded relative mt-4';
+            
             if (isError) {
                 messageType.textContent = 'エラー!';
-                messageBox.classList.remove('bg-green-100', 'border-green-400', 'text-green-700');
                 messageBox.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
             } else {
                 messageType.textContent = '成功!';
-                messageBox.classList.remove('bg-red-100', 'border-red-400', 'text-red-700');
-                messageBox.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+                messageBox.classList.add('bg-zinc-100', 'border-zinc-400', 'text-zinc-700');
             }
             setTimeout(() => {
                 messageBox.classList.add('hidden');
@@ -105,38 +100,44 @@
             const div = document.createElement('div');
             div.className = 'flex items-center space-x-2';
             div.innerHTML = `
-                <input type="text" class="stock-code-input flex-grow rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-gray-800 bg-gray-50" placeholder="例: 9432">
-                <button type="button" class="remove-stock-btn p-2 text-red-500 hover:text-red-700 focus:outline-none">
+                <input type="text" class="stock-code-input flex-grow rounded-md border-zinc-300 shadow-sm focus:border-zinc-500 focus:ring-zinc-500 p-2 text-zinc-900 bg-zinc-50" placeholder="例: 9432">
+                <button type="button" class="remove-stock-btn p-2 text-zinc-500 hover:text-zinc-700 focus:outline-none">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
             `;
-            const removeBtn = div.querySelector('.remove-stock-btn');
-            removeBtn.addEventListener('click', () => {
-                div.remove();
-                updateRemoveButtonsVisibility();
-            });
             return div;
         }
 
-        // 削除ボタンの表示/非表示を更新する関数（入力フィールドが1つの場合は非表示）
+        // 削除ボタンの表示/非表示を更新する関数
         function updateRemoveButtonsVisibility() {
-            const allInputs = document.querySelectorAll('#stockInputs .stock-code-input');
             const removeButtons = document.querySelectorAll('#stockInputs .remove-stock-btn');
-            if (allInputs.length <= 1) {
+            if (removeButtons.length <= 1) {
                 removeButtons.forEach(btn => btn.classList.add('hidden'));
             } else {
                 removeButtons.forEach(btn => btn.classList.remove('hidden'));
             }
         }
+        
+        // ★★★ 削除ボタンのイベントリスナー（イベント委任）★★★
+        stockInputsContainer.addEventListener('click', (event) => {
+            const removeBtn = event.target.closest('.remove-stock-btn');
+            if (removeBtn) {
+                removeBtn.parentElement.remove();
+                updateRemoveButtonsVisibility();
+            }
+        });
 
+        // 「株式コードを追加」ボタンのクリックイベント
         addStockBtn.addEventListener('click', () => {
             stockInputsContainer.appendChild(createStockInput());
             updateRemoveButtonsVisibility();
         });
 
-        // 最初の入力フィールドを初期化
-        stockInputsContainer.appendChild(createStockInput());
-        updateRemoveButtonsVisibility();
+        // ★★★ ページの読み込み時に最初の削除ボタンを非表示にする ★★★
+        document.addEventListener('DOMContentLoaded', () => {
+            updateRemoveButtonsVisibility();
+        });
+
 
         // 「X投稿文を生成」ボタンのイベントリスナー
         generatePostBtn.addEventListener('click', async () => {
@@ -207,7 +208,6 @@
                     showMessage('投稿文をクリップボードにコピーしました！', false);
                 }).catch(err => {
                     console.error('クリップボードへのコピーに失敗しました:', err);
-                    // 以前の互換性のある方法にフォールバック
                     const tempTextarea = document.createElement('textarea');
                     tempTextarea.value = postText;
                     document.body.appendChild(tempTextarea);
