@@ -72,8 +72,9 @@ def get_stock_data():
             # 配当利回り（小数）を取得し、存在しない場合は0.0を返す
             dividend_yield = stock_info.get('dividendYield', 0.0)
             
-            # 取得した小数に100を掛けてパーセント表示にし、小数点以下2桁に丸める
-            dividend_yield_percent = round(dividend_yield * 100, 2)
+            # yfinanceは配当利回り（%）をそのまま返す場合があるため、100倍の処理は削除
+            # 小数点以下2桁に丸める
+            dividend_yield_percent = round(dividend_yield, 2)
             
             stock_data[code] = {
                 'name': name,
@@ -93,7 +94,6 @@ def generate_post():
     stock_data = request.json.get('stockData', {})
     
     # 日付を自動生成
-    from datetime import date
     today_date_str = date.today().strftime("%Y年%m月%d日")
     
     # 投稿文の生成ロジック
