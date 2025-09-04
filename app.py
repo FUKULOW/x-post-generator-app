@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import yfinance as yf
-import requests
+from datetime import date
 
 app = Flask(__name__)
 
@@ -69,12 +69,15 @@ def get_stock_data():
             # 日本語名を辞書から取得し、見つからない場合はyfinanceの英語名を取得
             name = STOCK_NAMES_JP.get(code, stock_info.get('longName', '企業名不明'))
             
-            # 配当利回りを取得し、存在しない場合は0.0を返す
+            # 配当利回り（小数）を取得し、存在しない場合は0.0を返す
             dividend_yield = stock_info.get('dividendYield', 0.0)
+            
+            # 取得した小数に100を掛けてパーセント表示にし、小数点以下2桁に丸める
+            dividend_yield_percent = round(dividend_yield * 100, 2)
             
             stock_data[code] = {
                 'name': name,
-                'dividendYield': round(dividend_yield * 100, 2)
+                'dividendYield': dividend_yield_percent
             }
         except Exception as e:
             # エラー発生時も空のデータで継続
@@ -103,7 +106,7 @@ def generate_post():
         else:
             post_text += f"\n<{code}> {data['name']} 情報取得失敗"
 
-    post_text += "\n\n#投資 #株式投資 #日経平均"
+    post_text += "\n\n#高配当投資"
     
     return jsonify({
         "postText": post_text,
